@@ -422,6 +422,11 @@ class OpenIDConnectClient
     private $enabledSignatureAlgos;
 
     /**
+     * @var bool Downgrade the use of the Request Object approach for the authorization request to use plain parameters. False by default. 
+     */
+    private $disableRequestObject = false;
+
+    /**
      * @param string $providerUrl
      * @param string|null $clientId
      * @param string|null $clientSecret
@@ -868,8 +873,9 @@ class OpenIDConnectClient
         }
 
         // Send as signed JWT to remote server when client secret or private key is set
+        // This option could be disabled by setting disableRequestObject to true to avoid issues with some providers.
         // @see https://datatracker.ietf.org/doc/html/rfc9101
-        if ($this->getProviderConfigValue('request_parameter_supported', false) && ($this->clientPrivateKey || $this->clientSecret)) {
+        if ($this->getProviderConfigValue('request_parameter_supported', false) && ($this->clientPrivateKey || $this->clientSecret) && !$this->disableRequestObject) {
             if ($this->clientPrivateKey instanceof EC\PrivateKey) {
                 $jwt = Jwt::createEcSigned($authParams, $this->clientPrivateKey);
             } elseif ($this->clientPrivateKey) {
@@ -1921,6 +1927,15 @@ class OpenIDConnectClient
         }
 
         $this->authenticationMethod = $authenticationMethod;
+    }
+
+    /**
+     * @param bool $disableRequestObject
+     * @return void
+     */
+    public function setDisableRequestObject($disableRequestObject)
+    {
+        $this->disableRequestObject = $disableRequestObject;
     }
 
     /**
